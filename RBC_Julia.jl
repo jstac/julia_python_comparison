@@ -26,8 +26,6 @@ function main()
     outputSteadyState = capitalSteadyState^α
     consumptionSteadyState = outputSteadyState-capitalSteadyState
 
-    println("Output = ",outputSteadyState," Capital = ",capitalSteadyState," Consumption = ",consumptionSteadyState)
-
     # We generate the grid of capital
     vGridCapital = collect(0.5*capitalSteadyState:0.000005:1.5*capitalSteadyState)
 
@@ -86,22 +84,17 @@ function main()
             end
 
         end
-        
+
         maxDifference     = maximum(abs.(mValueFunctionNew-mValueFunction))
         mValueFunction, mValueFunctionNew = mValueFunctionNew, mValueFunction
-        
+
         iteration = iteration+1
-        if mod(iteration,20)==0 || iteration == 1
-            println(" Iteration = ", iteration, " Sup Diff = ", maxDifference)
-        end
 
     end
 
-    println(" Iteration = ", iteration, " Sup Diff = ", maxDifference)
-    println(" ")
-    println(" My check = ", mPolicyFunction[1000,3])
-    println(" My check = ", mValueFunction[1000,3])
-
 end
 
+println("First run (warm-up): ")
+@time main()
+println("Second run: ")
 @time main()
