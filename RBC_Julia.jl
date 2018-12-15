@@ -2,6 +2,7 @@
 #
 # Jesus Fernandez-Villaverde
 # Haverford, July 29, 2013
+using LinearAlgebra
 
 function main()
 
@@ -34,15 +35,15 @@ function main()
 
     # 3. Required matrices and vectors
 
-    mOutput           = zeros(nGridCapital,nGridProductivity)
+    mOutput           = Array{Float64}(undef,nGridCapital,nGridProductivity)
     mValueFunction    = zeros(nGridCapital,nGridProductivity)
-    mValueFunctionNew = zeros(nGridCapital,nGridProductivity)
-    mPolicyFunction   = zeros(nGridCapital,nGridProductivity)
-    expectedValueFunction = zeros(nGridCapital,nGridProductivity)
+    mValueFunctionNew = Array{Float64}(undef,nGridCapital,nGridProductivity)
+    mPolicyFunction   = Array{Float64}(undef,nGridCapital,nGridProductivity)
+    expectedValueFunction = Array{Float64}(undef,nGridCapital,nGridProductivity)
 
     # 4. We pre-build output for each point in the grid
 
-    mOutput = (vGridCapital.^α)*vProductivity;
+    mul!(mOutput, vGridCapital.^α, vProductivity)
 
     # 5. Main iteration
 
@@ -51,19 +52,19 @@ function main()
     iteration = 0
 
     while(maxDifference > tolerance)
-        expectedValueFunction = mValueFunction*mTransition';
+        mul!(expectedValueFunction, mValueFunction, mTransition')
 
-        for nProductivity in 1:nGridProductivity
+        @inbounds for nProductivity in 1:nGridProductivity
 
             # We start from previous choice (monotonicity of policy function)
             gridCapitalNextPeriod = 1
 
-            for nCapital in 1:nGridCapital
+            @inbounds for nCapital in 1:nGridCapital
 
                 valueHighSoFar = -1000.0
                 capitalChoice  = vGridCapital[1]
 
-                for nCapitalNextPeriod in gridCapitalNextPeriod:nGridCapital
+                @inbounds for nCapitalNextPeriod in gridCapitalNextPeriod:nGridCapital
 
                     consumption = mOutput[nCapital,nProductivity]-vGridCapital[nCapitalNextPeriod]
                     valueProvisional = (1-β)*log(consumption)+β*expectedValueFunction[nCapitalNextPeriod,nProductivity]
@@ -85,7 +86,7 @@ function main()
 
         end
 
-        maxDifference     = maximum(abs.(mValueFunctionNew-mValueFunction))
+        maxDifference     = maximum(abs(x -y) for (x, y) in zip(mValueFunctionNew,mValueFunction))
         mValueFunction, mValueFunctionNew = mValueFunctionNew, mValueFunction
 
         iteration = iteration+1
